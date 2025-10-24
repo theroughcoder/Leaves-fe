@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Register.css';
 
 interface RegisterFormData {
@@ -25,6 +27,7 @@ interface RegisterErrors {
 }
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: '',
     lastName: '',
@@ -38,6 +41,7 @@ const Register: React.FC = () => {
   
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = (): boolean => {
     const newErrors: RegisterErrors = {};
@@ -110,14 +114,58 @@ const Register: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Make API call to register endpoint
+      const response = await axios.post('http://localhost:5000/api/users/register', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        department: formData.department,
+        position: formData.position,
+        employeeId: formData.employeeId
+      });
       
-      // Handle successful registration here
-      console.log('Registration successful:', formData);
+      // Handle successful registration
+      console.log('Registration successful:', response.data);
       
-    } catch (error) {
-      setErrors({ general: 'Registration failed. Please try again.' });
+      // Show success message
+      setSuccessMessage('Account created successfully! Redirecting to login...');
+      
+      // Clear form data
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        department: '',
+        position: '',
+        employeeId: ''
+      });
+      
+      // Clear any existing errors
+      setErrors({});
+      
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 'Registration failed. Please try again.';
+        setErrors({ general: errorMessage });
+      } else if (error.request) {
+        // Request was made but no response received
+        setErrors({ general: 'Unable to connect to server. Please check your connection.' });
+      } else {
+        // Something else happened
+        setErrors({ general: 'Registration failed. Please try again.' });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -132,6 +180,12 @@ const Register: React.FC = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="register-form">
+          {successMessage && (
+            <div className="success-message">
+              {successMessage}
+            </div>
+          )}
+          
           {errors.general && (
             <div className="error-message general-error">
               {errors.general}
