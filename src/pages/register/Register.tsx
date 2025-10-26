@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 import './Register.css';
 
 interface RegisterFormData {
@@ -28,6 +29,7 @@ interface RegisterErrors {
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: '',
     lastName: '',
@@ -126,30 +128,36 @@ const Register: React.FC = () => {
       });
       
       // Handle successful registration
-      console.log('Registration successful:', response.data);
+      if (response.data.success) {
+        const { user, token } = response.data;
+        
+        // Store authentication data
+        login({ user, token });
+        
+        // Show success message
+        setSuccessMessage('Account created successfully! Redirecting to dashboard...');
+        
+        // Clear form data
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          department: '',
+          position: '',
+          employeeId: ''
+        });
+        
+        // Clear any existing errors
+        setErrors({});
+        
+        // Navigate to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      }
       
-      // Show success message
-      setSuccessMessage('Account created successfully! Redirecting to login...');
-      
-      // Clear form data
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        department: '',
-        position: '',
-        employeeId: ''
-      });
-      
-      // Clear any existing errors
-      setErrors({});
-      
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
       
     } catch (error: any) {
       console.error('Registration error:', error);

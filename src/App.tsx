@@ -4,12 +4,14 @@ import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import Register from './pages/register/Register';
 import Dashboard from './pages/dashboard/Dashboard';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
 const router = createBrowserRouter([
 
   {
-    path: "/Login",
+    path: "/login",
     element: <Login/>,
   },
   {
@@ -18,11 +20,27 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    Component: Dashboard,
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
 ]);
 
-  return <RouterProvider router={router}/>
+  return (
+    <AuthProvider>
+      <RouterProvider router={router}/>
+    </AuthProvider>
+  )
 }
 
 export default App

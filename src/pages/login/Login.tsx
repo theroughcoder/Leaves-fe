@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 
 interface LoginFormData {
@@ -13,6 +16,8 @@ interface LoginErrors {
 }
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
@@ -66,14 +71,47 @@ const Login: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Make API call to login endpoint
+      const response = await axios.post('http://localhost:5000/api/users/login', {
+        email: formData.email,
+        password: formData.password
+      });
       
-      // Handle successful login here
-      console.log('Login successful:', formData);
+      // Handle successful login
+      if (response.data.success) {
+        const { user, token } = response.data;
+        
+        // Store authentication data
+        login({ user, token });
+        
+        // Clear form data
+        setFormData({
+          email: '',
+          password: ''
+        });
+        
+        // Clear any existing errors
+        setErrors({});
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      }
       
-    } catch (error) {
-      setErrors({ general: 'Login failed. Please try again.' });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 'Login failed. Please try again.';
+        setErrors({ general: errorMessage });
+      } else if (error.request) {
+        // Request was made but no response received
+        setErrors({ general: 'Unable to connect to server. Please check your connection.' });
+      } else {
+        // Something else happened
+        setErrors({ general: 'Login failed. Please try again.' });
+      }
     } finally {
       setIsLoading(false);
     }

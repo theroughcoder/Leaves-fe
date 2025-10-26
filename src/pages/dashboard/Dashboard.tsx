@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 interface DashboardProps {}
 
 const Dashboard: React.FC<DashboardProps> = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -267,8 +276,24 @@ const Dashboard: React.FC<DashboardProps> = () => {
           </div>
           <div className="user-menu">
             <div className="user-avatar">👤</div>
-            <span>Admin User</span>
-            <span>▼</span>
+            <span>{user?.firstName} {user?.lastName}</span>
+            <div className="user-dropdown">
+              <span>▼</span>
+              <div className="dropdown-menu">
+                <div className="dropdown-item">
+                  <span>👤</span>
+                  Profile
+                </div>
+                <div className="dropdown-item">
+                  <span>⚙️</span>
+                  Settings
+                </div>
+                <div className="dropdown-item" onClick={handleLogout}>
+                  <span>🚪</span>
+                  Logout
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
