@@ -8,6 +8,7 @@ import Calendar from './pages/calendar/Calendar';
 import Leaves from './pages/leaves/Leaves';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
+import Profile from './pages/profile/Profile';
 import Layout from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -78,6 +79,16 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <Settings />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <Profile />
         </Layout>
       </ProtectedRoute>
     ),
