@@ -36,7 +36,7 @@ const Profile: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -172,13 +172,30 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1>My Profile</h1>
-        <div className="profile-actions">
+    <div className="modern-profile-container">
+      <div className="profile-banner" />
+      <div className="profile-card modern-profile-card">
+        <div className="profile-main-row avatar-inline-row">
+          <div className="profile-avatar-wrapper large-avatar-wrapper">
+            <div className="avatar-circle avatar-overlap large-avatar">
+              {profile.firstName.charAt(0).toUpperCase()}
+              {profile.lastName.charAt(0).toUpperCase()}
+            </div>
+          </div>
+          <div className="profile-basic-info avatar-next-info">
+            <h1 className="profile-user-name">{profile.firstName} {profile.lastName}</h1>
+            <div className="profile-position">
+              {profile.position}
+            </div>
+            <div className="profile-location">
+              <span role="img" aria-label="Location">📍</span> {profile.department}
+            </div>
+          </div>
+        </div>
+        <div className="modern-profile-actions-row">
           {!isEditing ? (
             <button onClick={handleEdit} className="edit-btn">
-              Edit Profile
+              ✏️ Edit Profile
             </button>
           ) : (
             <div className="edit-actions">
@@ -187,7 +204,7 @@ const Profile: React.FC = () => {
                 disabled={isSaving}
                 className="save-btn"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? 'Saving...' : '💾 Save Changes'}
               </button>
               <button 
                 onClick={handleCancel} 
@@ -199,123 +216,36 @@ const Profile: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {error && (
-        <div className="alert alert-error">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="alert alert-success">
-          {success}
-        </div>
-      )}
-
-      <div className="profile-content">
-        <div className="profile-card">
-          <div className="profile-avatar">
-            <div className="avatar-circle">
-              {profile.firstName.charAt(0).toUpperCase()}
-              {profile.lastName.charAt(0).toUpperCase()}
-            </div>
+        {error && (
+          <div className="alert alert-error">
+            <span role="img" aria-label="Error" style={{marginRight:8}}>❌</span>
+            {error}
           </div>
-
-          <div className="profile-info">
-            <div className="info-section">
-              <h3>Personal Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>First Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={editForm.firstName}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    />
-                  ) : (
-                    <span className="info-value">{profile.firstName}</span>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Last Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={editForm.lastName}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    />
-                  ) : (
-                    <span className="info-value">{profile.lastName}</span>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Email</label>
-                  <span className="info-value">{profile.email}</span>
-                </div>
-
-                <div className="info-item">
-                  <label>Employee ID</label>
-                  <span className="info-value">{profile.employeeId}</span>
-                </div>
-              </div>
+        )}
+        {success && (
+          <div className="alert alert-success">
+            <span role="img" aria-label="Success" style={{marginRight:8}}>✅</span>
+            {success}
+          </div>
+        )}
+        <div className="modern-profile-content">
+          {/* All extra info sections below */}
+          <div className="profile-info-grid">
+            <div>
+              <label>Email</label>
+              <div className="info-value">{profile.email}</div>
             </div>
-
-            <div className="info-section">
-              <h3>Work Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Department</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="department"
-                      value={editForm.department}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    />
-                  ) : (
-                    <span className="info-value">{profile.department}</span>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Position</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="position"
-                      value={editForm.position}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    />
-                  ) : (
-                    <span className="info-value">{profile.position}</span>
-                  )}
-                </div>
-              </div>
+            <div>
+              <label>Employee ID</label>
+              <div className="info-value">{profile.employeeId}</div>
             </div>
-
-            <div className="info-section">
-              <h3>Account Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Member Since</label>
-                  <span className="info-value">{formatDate(profile.createdAt)}</span>
-                </div>
-
-                <div className="info-item">
-                  <label>Last Updated</label>
-                  <span className="info-value">{formatDate(profile.updatedAt)}</span>
-                </div>
-              </div>
+            <div>
+              <label>Member Since</label>
+              <div className="info-value">{formatDate(profile.createdAt)}</div>
+            </div>
+            <div>
+              <label>Last Updated</label>
+              <div className="info-value">{formatDate(profile.updatedAt)}</div>
             </div>
           </div>
         </div>
