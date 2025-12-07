@@ -11,7 +11,7 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
   department: string;
-  position: string;
+  role: string;
   employeeId: string;
 }
 
@@ -22,7 +22,7 @@ interface RegisterErrors {
   password?: string;
   confirmPassword?: string;
   department?: string;
-  position?: string;
+  role?: string;
   employeeId?: string;
   general?: string;
 }
@@ -37,7 +37,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     department: '',
-    position: '',
+    role: '',
     employeeId: ''
   });
   
@@ -78,8 +78,8 @@ const Register: React.FC = () => {
       newErrors.department = 'Department is required';
     }
     
-    if (!formData.position) {
-      newErrors.position = 'Position is required';
+    if (!formData.role) {
+      newErrors.role = 'Role is required';
     }
     
     if (!formData.employeeId.trim()) {
@@ -117,13 +117,13 @@ const Register: React.FC = () => {
     
     try {
       // Make API call to register endpoint
-      const response = await axios.post('http://localhost:5000/api/users/register', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/admin/register`, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
         department: formData.department,
-        position: formData.position,
+        role: formData.role,
         employeeId: formData.employeeId
       });
       
@@ -145,7 +145,7 @@ const Register: React.FC = () => {
           password: '',
           confirmPassword: '',
           department: '',
-          position: '',
+          role: '',
           employeeId: ''
         });
         
@@ -326,21 +326,24 @@ const Register: React.FC = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="position" className="form-label">
-                Position
+              <label htmlFor="role" className="form-label">
+                Role
               </label>
-              <input
-                type="text"
-                id="position"
-                name="position"
-                value={formData.position}
+               <select
+                id="role"
+                name="role"
+                value={formData.role}
                 onChange={handleInputChange}
-                className={`form-input ${errors.position ? 'error' : ''}`}
-                placeholder="Enter your position"
+                className={`form-input ${errors.role ? 'error' : ''}`}
                 disabled={isLoading}
-              />
-              {errors.position && (
-                <span className="error-message">{errors.position}</span>
+              >
+                <option value="">Select Role</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="employee">Employee</option>
+              </select>
+              {errors.role && (
+                <span className="error-message">{errors.role}</span>
               )}
             </div>
           </div>
