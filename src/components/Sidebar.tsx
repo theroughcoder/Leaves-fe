@@ -13,6 +13,7 @@ const Sidebar: React.FC = () => {
     { id: 'calendar', label: 'Calendar', icon: '📅', path: '/calendar' },
     { id: 'leaves', label: 'Leaves', icon: '🍃', path: '/leaves' },
     { id: 'reports', label: 'Reports', icon: '📊', path: '/reports' },
+    ...(isAdmin ? [{ id: 'users', label: 'Users', icon: '👥', path: '/admin/users' }] : []),
     { id: 'profile', label: 'Profile', icon: '👤', path: '/profile' },
     { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' }
   ];
