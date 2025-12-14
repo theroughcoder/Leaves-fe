@@ -12,6 +12,7 @@ interface UserProfile {
   employeeId: string;
   createdAt: string;
   updatedAt: string;
+  role?: string;
 }
 
 const Profile: React.FC = () => {
@@ -172,27 +173,53 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="modern-profile-container">
-      <div className="profile-banner" />
-      <div className="profile-card modern-profile-card">
+    <div className={`modern-profile-container${profile.role === 'admin' ? ' admin-profile-theme' : ''}`}>
+      <div className={profile.role === 'admin' ? 'profile-banner admin-banner' : 'profile-banner'} />
+      <div className={`profile-card modern-profile-card${profile.role === 'admin' ? ' admin-card' : ''}`}>
         <div className="profile-main-row avatar-inline-row">
           <div className="profile-avatar-wrapper large-avatar-wrapper">
-            <div className="avatar-circle avatar-overlap large-avatar">
+            <div className={`avatar-circle avatar-overlap large-avatar${profile.role === 'admin' ? ' admin-avatar' : ''}`}>
               {profile.firstName.charAt(0).toUpperCase()}
               {profile.lastName.charAt(0).toUpperCase()}
             </div>
           </div>
           <div className="profile-basic-info avatar-next-info">
-            <h1 className="profile-user-name">{profile.firstName} {profile.lastName}</h1>
-            <div className="profile-position">
-              {profile.position}
-            </div>
+            <h1 className="profile-user-name">
+              {profile.firstName} {profile.lastName}
+              {profile.role === 'admin' && (
+                <span style={{
+                  background: '#ffc7c7',
+                  color: '#b3001b',
+                  marginLeft: 12,
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: '0.89rem',
+                  padding: '0.18em 0.7em',
+                  verticalAlign: 'middle'
+                }}>ADMIN</span>
+              )}
+            </h1>
+            <div className="profile-position">{profile.position}</div>
             <div className="profile-location">
               <span role="img" aria-label="Location">📍</span> {profile.department}
             </div>
           </div>
         </div>
         <div className="modern-profile-actions-row">
+          {/* Any admin-only actions can be added here */}
+          {profile.role === 'admin' && (
+            <button style={{
+              background: 'linear-gradient(90deg, #f85032 0%, #e73827 100%)',
+              color: 'white',
+              fontWeight: 700,
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.7rem 2rem',
+              marginRight: 16
+            }}>
+              Admin Panel
+            </button>
+          )}
           {!isEditing ? (
             <button onClick={handleEdit} className="edit-btn">
               ✏️ Edit Profile
@@ -246,6 +273,11 @@ const Profile: React.FC = () => {
             <div>
               <label>Last Updated</label>
               <div className="info-value">{formatDate(profile.updatedAt)}</div>
+            </div>
+            {/* Optionally show role for all users */}
+            <div>
+              <label>Role</label>
+              <div className="info-value">{profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'User'}</div>
             </div>
           </div>
         </div>

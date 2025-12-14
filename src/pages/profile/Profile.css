@@ -512,3 +512,30 @@
     min-height: 98px;
   }
 }
+
+.admin-profile-theme {
+  box-shadow: 0 0 0 0;
+  background: none;
+}
+.admin-banner {
+  /* default, can be overridden below */
+}
+.admin-banner {
+  background: linear-gradient(130deg, #ffd6d6 0%, #fff0ec 60%, #ffe3db 100%) !important;
+  height: 160px;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  width: 100%;
+  box-shadow: 0 6px 32px rgba(254,220,213,0.15);
+  position: relative;
+}
+.admin-card {
+  border: 2.2px solid #ffb6a0;
+  box-shadow: 0 6px 30px rgba(255,179,168,0.14) !important;
+  background: rgba(255,241,236,0.98) !important;
+}
+.admin-avatar {
+  background: linear-gradient(135deg, #ffd6d6 0%, #ffb6a0 100%) !important;
+  color: #d95329 !important;
+  box-shadow: 0 8px 25px rgba(255,182,160,0.28) !important;
+}

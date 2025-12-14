@@ -10,6 +10,7 @@ export interface User {
   employeeId: string;
   createdAt: string;
   updatedAt: string;
+  role?: string;
 }
 
 export interface AuthData {

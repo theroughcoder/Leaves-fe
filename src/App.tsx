@@ -12,6 +12,7 @@ import Profile from './pages/profile/Profile';
 import Layout from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import UsersPage from './pages/admin/UsersPage';
 
 function App() {
 const router = createBrowserRouter([
@@ -89,6 +90,16 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <Profile />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/users",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <UsersPage />
         </Layout>
       </ProtectedRoute>
     ),

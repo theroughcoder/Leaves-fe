@@ -6,6 +6,7 @@ import './DashboardHeader.css';
 const DashboardHeader: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'admin';
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -55,7 +56,7 @@ const DashboardHeader: React.FC = () => {
   };
 
   return (
-    <header className="dashboard-header">
+    <header className={`dashboard-header${isAdmin ? ' admin-header' : ''}`}>
       <div className="header-left">
         <h1>Dashboard</h1>
       </div>
@@ -73,9 +74,15 @@ const DashboardHeader: React.FC = () => {
         </form>
         <div className="user-menu">
           <div className="user-avatar">👤</div>
+          {isAdmin && (
+            <span className="admin-tag">ADMIN</span>
+          )}
+         
           <div className="user-info">
             <span className="user-name">{user?.firstName} {user?.lastName}</span>
-            <span className="user-role">{user?.position}</span>
+            {user?.role === 'manager' && (
+            <span className="manager-tag">MANAGE</span>
+          )}
           </div>
           <div className="user-dropdown" ref={dropdownRef}>
             <button 

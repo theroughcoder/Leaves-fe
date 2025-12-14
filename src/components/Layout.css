@@ -37,3 +37,13 @@
     flex-direction: column;
   }
 }
+
+.admin-theme {
+  background: linear-gradient(120deg,#fff7f5 0%, #ffe5e0 60%, #ffeae6 100%) !important;
+}
+.admin-theme .main-content {
+  background: linear-gradient(120deg, #fff4ee 0%, #ffe5e5 100%) !important;
+}
+.admin-theme .layout-body {
+  background: transparent;
+}
