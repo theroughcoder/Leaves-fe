@@ -58,6 +58,30 @@
   letter-spacing: 0.5px;
 }
 
+/* Admin Sidebar - Red Theme */
+.admin-sidebar {
+  background: linear-gradient(135deg, #a9271c 0%, #8d1f16 50%, #c44928 100%);
+  box-shadow: 2px 0 15px rgba(169, 39, 28, 0.3);
+}
+
+.admin-sidebar .nav-item {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-sidebar .nav-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.admin-sidebar .nav-item.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .sidebar {
