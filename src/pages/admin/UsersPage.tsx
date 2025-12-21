@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Table,
@@ -45,6 +47,15 @@ interface User {
   createdAt: string;
 }
 
+interface Manager {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department: string;
+  role: string;
+}
+
 interface CreateUserFormData {
   firstName: string;
   lastName: string;
@@ -54,7 +65,42 @@ interface CreateUserFormData {
   department: string;
   role: string;
   employeeId: string;
+  managerId: string;
 }
+
+// Yup validation schema for user creation
+const validationSchema = Yup.object({
+  firstName: Yup.string()
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must not exceed 50 characters')
+    .required('First name is required'),
+  lastName: Yup.string()
+    .min(2, 'Last name must be at least 2 characters')
+    .max(50, 'Last name must not exceed 50 characters')
+    .required('Last name is required'),
+  email: Yup.string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+  password: Yup.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(50, 'Password must not exceed 50 characters')
+    .required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Passwords do not match')
+    .required('Please confirm your password'),
+  department: Yup.string()
+    .required('Department is required'),
+  role: Yup.string()
+    .required('Role is required'),
+  employeeId: Yup.string()
+    .required('Employee ID is required'),
+  managerId: Yup.string()
+    .when('role', {
+      is: 'employee',
+      then: (schema) => schema.required('Manager is required for employee role'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+});
 
 const UsersPage: React.FC = () => {
   const { user, token } = useAuth();
@@ -65,16 +111,59 @@ const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<CreateUserFormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    department: '',
-    role: '',
-    employeeId: ''
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [loadingManagers, setLoadingManagers] = useState(false);
+
+  // Formik form management
+  const formik = useFormik<CreateUserFormData>({
+    initialValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      department: '',
+      role: '',
+      employeeId: '',
+      managerId: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setCreateLoading(true);
+      setGeneralError(null);
+
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/api/users/admin/register`,
+          {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            password: values.password,
+            department: values.department,
+            role: values.role,
+            employeeId: values.employeeId,
+            managerId: values.managerId || null
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (response.data.success) {
+          handleCloseDialog();
+          fetchUsers(); // Refresh the users list
+        } else {
+          setGeneralError(response.data.message || 'Failed to create user');
+        }
+      } catch (err: any) {
+        const errorMessage = err.response?.data?.message || 'Failed to create user';
+        setGeneralError(errorMessage);
+      } finally {
+        setCreateLoading(false);
+      }
+    },
   });
 
   const fetchUsers = async () => {
@@ -97,9 +186,24 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const fetchManagers = async () => {
+    setLoadingManagers(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users/managers`);
+      if (response.data.success) {
+        setManagers(response.data.managers);
+      }
+    } catch (err) {
+      console.error('Error fetching managers:', err);
+    } finally {
+      setLoadingManagers(false);
+    }
+  };
+
   useEffect(() => {
     if (user && user.role === 'admin') {
       fetchUsers();
+      fetchManagers();
     }
   }, [token, user]);
 
@@ -130,114 +234,14 @@ const UsersPage: React.FC = () => {
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
-    setCreateError(null);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      department: '',
-      role: '',
-      employeeId: ''
-    });
+    setGeneralError(null);
+    formik.resetForm();
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setCreateError(null);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (createError) setCreateError(null);
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.firstName.trim()) {
-      setCreateError('First name is required');
-      return false;
-    }
-    if (!formData.lastName.trim()) {
-      setCreateError('Last name is required');
-      return false;
-    }
-    if (!formData.email) {
-      setCreateError('Email is required');
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setCreateError('Please enter a valid email address');
-      return false;
-    }
-    if (!formData.password) {
-      setCreateError('Password is required');
-      return false;
-    }
-    if (formData.password.length < 8) {
-      setCreateError('Password must be at least 8 characters');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setCreateError('Passwords do not match');
-      return false;
-    }
-    if (!formData.department) {
-      setCreateError('Department is required');
-      return false;
-    }
-    if (!formData.role) {
-      setCreateError('Role is required');
-      return false;
-    }
-    if (!formData.employeeId.trim()) {
-      setCreateError('Employee ID is required');
-      return false;
-    }
-    return true;
-  };
-
-  const handleCreateUser = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    setCreateLoading(true);
-    setCreateError(null);
-
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/users/admin/register`,
-        {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          department: formData.department,
-          role: formData.role,
-          employeeId: formData.employeeId
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      if (response.data.success) {
-        handleCloseDialog();
-        fetchUsers(); // Refresh the users list
-      } else {
-        setCreateError(response.data.message || 'Failed to create user');
-      }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create user';
-      setCreateError(errorMessage);
-    } finally {
-      setCreateLoading(false);
-    }
+    setGeneralError(null);
+    formik.resetForm();
   };
 
   if (!user || user.role !== 'admin') {
@@ -471,19 +475,22 @@ const UsersPage: React.FC = () => {
           Create New User
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
-          {createError && (
+          {generalError && (
             <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-              {createError}
+              {generalError}
             </Alert>
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box component="form" onSubmit={formik.handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
               <TextField
                 fullWidth
                 label="First Name"
                 name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
+                value={formik.values.firstName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                helperText={formik.touched.firstName && formik.errors.firstName}
                 required
                 disabled={createLoading}
               />
@@ -491,8 +498,11 @@ const UsersPage: React.FC = () => {
                 fullWidth
                 label="Last Name"
                 name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
+                value={formik.values.lastName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                helperText={formik.touched.lastName && formik.errors.lastName}
                 required
                 disabled={createLoading}
               />
@@ -502,8 +512,11 @@ const UsersPage: React.FC = () => {
               label="Email Address"
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleInputChange}
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.email && Boolean(formik.errors.email)}
+              helperText={formik.touched.email && formik.errors.email}
               required
               disabled={createLoading}
             />
@@ -513,19 +526,24 @@ const UsersPage: React.FC = () => {
                 label="Password"
                 name="password"
                 type="password"
-                value={formData.password}
-                onChange={handleInputChange}
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.password && Boolean(formik.errors.password)}
+                helperText={formik.touched.password && formik.errors.password ? formik.errors.password : 'Must be at least 8 characters'}
                 required
                 disabled={createLoading}
-                helperText="Must be at least 8 characters"
               />
               <TextField
                 fullWidth
                 label="Confirm Password"
                 name="confirmPassword"
                 type="password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
+                value={formik.values.confirmPassword}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                 required
                 disabled={createLoading}
               />
@@ -536,8 +554,11 @@ const UsersPage: React.FC = () => {
                 select
                 label="Department"
                 name="department"
-                value={formData.department}
-                onChange={handleInputChange}
+                value={formik.values.department}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.department && Boolean(formik.errors.department)}
+                helperText={formik.touched.department && formik.errors.department}
                 required
                 disabled={createLoading}
                 SelectProps={{
@@ -557,8 +578,11 @@ const UsersPage: React.FC = () => {
                 select
                 label="Role"
                 name="role"
-                value={formData.role}
-                onChange={handleInputChange}
+                value={formik.values.role}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.role && Boolean(formik.errors.role)}
+                helperText={formik.touched.role && formik.errors.role}
                 required
                 disabled={createLoading}
                 SelectProps={{
@@ -571,15 +595,51 @@ const UsersPage: React.FC = () => {
                 <option value="employee">Employee</option>
               </TextField>
             </Box>
-            <TextField
-              fullWidth
-              label="Employee ID"
-              name="employeeId"
-              value={formData.employeeId}
-              onChange={handleInputChange}
-              required
-              disabled={createLoading}
-            />
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+              <TextField
+                fullWidth
+                label="Employee ID"
+                name="employeeId"
+                value={formik.values.employeeId}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.employeeId && Boolean(formik.errors.employeeId)}
+                helperText={formik.touched.employeeId && formik.errors.employeeId}
+                required
+                disabled={createLoading}
+              />
+              <TextField
+                fullWidth
+                select
+                label={`Manager${formik.values.role === 'employee' ? ' *' : ' (Optional)'}`}
+                name="managerId"
+                value={formik.values.managerId}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.managerId && Boolean(formik.errors.managerId)}
+                helperText={
+                  formik.touched.managerId && formik.errors.managerId 
+                    ? formik.errors.managerId
+                    : formik.values.role === 'employee' 
+                      ? 'Required for employees' 
+                      : 'Optional for admin/manager'
+                }
+                required={formik.values.role === 'employee'}
+                disabled={createLoading || loadingManagers}
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="">
+                  {loadingManagers ? 'Loading managers...' : 'Select Manager'}
+                </option>
+                {managers.map((manager) => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.firstName} {manager.lastName} - {manager.department} ({manager.role})
+                  </option>
+                ))}
+              </TextField>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 2 }}>
@@ -591,9 +651,9 @@ const UsersPage: React.FC = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleCreateUser}
+            onClick={() => formik.handleSubmit()}
             variant="contained"
-            disabled={createLoading}
+            disabled={createLoading || formik.isSubmitting}
             sx={{
               bgcolor: '#a9271c',
               '&:hover': { bgcolor: '#8d1f16' },
@@ -601,7 +661,7 @@ const UsersPage: React.FC = () => {
               px: 3
             }}
           >
-            {createLoading ? (
+            {createLoading || formik.isSubmitting ? (
               <>
                 <CircularProgress size={16} sx={{ mr: 1, color: 'white' }} />
                 Creating...
