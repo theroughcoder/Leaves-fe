@@ -11,6 +11,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role?: string;
+  managerId?: number | null;
 }
 
 export interface AuthData {
