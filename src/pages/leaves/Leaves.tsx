@@ -3,6 +3,7 @@ import './Leaves.css';
 import { useAuth } from '../../contexts/AuthContext';
 import LeaveRequestModal, {type LeaveFormData } from '../../components/LeaveRequestModal';
 import { createLeave, getUserLeaves, type Leave } from '../../services/leaveService';
+import { toast } from 'react-toastify';
 
 const Leaves: React.FC = () => {
   const { user } = useAuth();
@@ -36,10 +37,16 @@ const Leaves: React.FC = () => {
       setShowModal(false);
       // Refresh the leaves list
       await fetchLeaves();
-      alert('Leave request submitted successfully!');
+      toast.success('Leave request submitted successfully!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     } catch (err) {
       console.error('Error creating leave request:', err);
-      alert(err instanceof Error ? err.message : 'Failed to submit leave request');
+      toast.error(err instanceof Error ? err.message : 'Failed to submit leave request', {
+        position: 'top-right',
+        autoClose: 4000,
+      });
     }
   };
 
@@ -105,6 +112,7 @@ const Leaves: React.FC = () => {
             show={showModal}
             onClose={() => setShowModal(false)}
             onSubmit={handleLeaveRequest}
+            existingLeaves={leaves}
           />
         </div>
         <div className="leaves-stats">

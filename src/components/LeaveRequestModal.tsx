@@ -15,12 +15,20 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/de';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
+
+interface Leave {
+  id: number;
+  fromDate: string;
+  toDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
 
 interface LeaveRequestModalProps {
   show: boolean;
   onClose: () => void;
   onSubmit: (data: LeaveFormData) => void;
+  existingLeaves?: Leave[];
 }
 
 export interface LeaveFormData {
@@ -39,12 +47,29 @@ const leaveTypes = [
   'Other',
 ];
 
-const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({ show, onClose, onSubmit }) => {
+const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({ show, onClose, onSubmit, existingLeaves = [] }) => {
   const [fromDate, setFromDate] = useState<Dayjs | null>(null);
   const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [leaveType, setLeaveType] = useState(leaveTypes[0]);
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
+
+  // Function to check if a date is within any pending/approved leave
+  const shouldDisableDate = (date: Dayjs) => {
+    const pendingOrApprovedLeaves = existingLeaves.filter(
+      leave => leave.status === 'pending' || leave.status === 'approved'
+    );
+
+    return pendingOrApprovedLeaves.some(leave => {
+      const leaveStart = dayjs(leave.fromDate).startOf('day');
+      const leaveEnd = dayjs(leave.toDate).startOf('day');
+      const checkDate = date.startOf('day');
+      
+      // Check if date is within the leave range (inclusive)
+      return (checkDate.isAfter(leaveStart) || checkDate.isSame(leaveStart)) && 
+             (checkDate.isBefore(leaveEnd) || checkDate.isSame(leaveEnd));
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +113,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({ show, onClose, on
               value={fromDate}
               onChange={(newValue: Dayjs | null) => setFromDate(newValue)}
               format="DD/MM/YYYY"
+              shouldDisableDate={shouldDisableDate}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -102,6 +128,7 @@ const LeaveRequestModal: React.FC<LeaveRequestModalProps> = ({ show, onClose, on
               onChange={(newValue: Dayjs | null) => setToDate(newValue)}
               minDate={fromDate || undefined}
               format="DD/MM/YYYY"
+              shouldDisableDate={shouldDisableDate}
               slotProps={{
                 textField: {
                   fullWidth: true,

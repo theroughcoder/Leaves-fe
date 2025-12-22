@@ -6,6 +6,7 @@ import Register from './pages/register/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import Calendar from './pages/calendar/Calendar';
 import Leaves from './pages/leaves/Leaves';
+import Tasks from './pages/tasks/Tasks';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 import Profile from './pages/profile/Profile';
@@ -13,6 +14,8 @@ import Layout from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import UsersPage from './pages/admin/UsersPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
 const router = createBrowserRouter([
@@ -65,6 +68,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/tasks",
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <Tasks />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/reports",
     element: (
       <ProtectedRoute>
@@ -109,6 +122,7 @@ const router = createBrowserRouter([
   return (
     <AuthProvider>
       <RouterProvider router={router}/>
+      <ToastContainer />
     </AuthProvider>
   )
 }

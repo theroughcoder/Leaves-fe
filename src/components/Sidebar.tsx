@@ -8,10 +8,12 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
 
   const menuItems = [
     { id: 'calendar', label: 'Calendar', icon: '📅', path: '/calendar' },
     { id: 'leaves', label: 'Leaves', icon: '🍃', path: '/leaves' },
+    ...(isManager ? [{ id: 'tasks', label: 'Task', icon: '✓', path: '/tasks' }] : []),
     { id: 'reports', label: 'Reports', icon: '📊', path: '/reports' },
     ...(isAdmin ? [{ id: 'users', label: 'Users', icon: '👥', path: '/admin/users' }] : []),
     { id: 'profile', label: 'Profile', icon: '👤', path: '/profile' },
